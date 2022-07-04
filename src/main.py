@@ -1,10 +1,15 @@
 # Copyright 2022 aaaaaaaalesha
 
-from identifier import id
+from identifier import injector, checker
 
 if __name__ == '__main__':
-    path = "B:\\github\\fuzzy_docmarking_checker\\test.xlsx"
+    path1 = "B:\\github\\fuzzy_docmarking_checker\\rpz1.docx"
+    path2 = "B:\\github\\fuzzy_docmarking_checker\\rpz2.docx"
 
-    id_ = id.Identifier(path)
+    id_1 = injector.IdentifierInjector(path1)
+    id_2 = injector.IdentifierInjector(path2)
 
-    id_.inject_identifier('../out/')
+    id_1.inject_identifier('../out/')
+    id_2.inject_identifier('../out/')
+
+    print(checker.identity_check('../out/rpz1.docx', '../out/rpz2.docx'))
