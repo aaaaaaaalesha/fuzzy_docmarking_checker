@@ -5,7 +5,7 @@ import os
 from identifier import id
 
 if __name__ == '__main__':
-    path = "B:\\github\\fuzzy_docmarking_checker\\test.docx"
+    path = "B:\\github\\fuzzy_docmarking_checker\\test.xlsx"
 
     id_ = id.Identifier(path)
 

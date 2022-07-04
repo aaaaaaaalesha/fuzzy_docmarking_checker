@@ -82,6 +82,7 @@ class Identifier:
             soup = BeautifulSoup(zip_ref.read(const.APP), 'xml')
             company_tag = soup.find('Company')
 
+            # Inject base64 identifier in company tag if it
             if company_tag is not None:
                 company_tag.string = self.__encode_base64_id()
             else:
@@ -89,7 +90,7 @@ class Identifier:
                     BeautifulSoup(f"<Company>{self.__encode_base64_id()}</Company>", 'xml')
                 )
 
-        with open(f'{const.TEMP_DIR}/{const.APP}', 'w') as app_xml:
+        with open(f'{const.TEMP_DIR}/{const.APP}', 'w', encoding='utf-8') as app_xml:
             app_xml.write(str(soup))
 
         subprocess.run(
@@ -101,4 +102,4 @@ class Identifier:
             os.remove(f'{out_folder}/{self.__filename}')
 
         shutil.move(f'{const.TEMP_DIR}/{self.__filename}', out_folder)
-        shutil.rmtree(const.TEMP_DIR)
+        # shutil.rmtree(const.TEMP_DIR)
