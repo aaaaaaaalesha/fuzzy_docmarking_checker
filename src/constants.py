@@ -9,3 +9,4 @@ CORE = 'docProps/core.xml'
 
 DOC_CREATOR_TAG = 'dc:creator'
 DOC_DT_CREATED = 'dcterms:created'
+DOC_CP_KEYWORDS = 'cp:keywords'
