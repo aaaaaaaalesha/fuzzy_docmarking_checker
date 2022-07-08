@@ -1,6 +1,7 @@
 # Copyright 2022 aaaaaaaalesha
 import base64
 import os
+import socket
 import subprocess
 import zipfile
 import shutil
@@ -37,11 +38,14 @@ class IdentifierInjector:
             # Saving name of creator.
             self.__creator_name = soup.find(const.DOC_CREATOR_TAG).string
 
-            # TODO: Saving automated workplace name.
-            # how to find it?
+            # Saving name of workplace.
+            self.__workplace_name = socket.gethostname()
 
             # Saving creation time.
             self.__creation_time = soup.find(const.DOC_DT_CREATED).string
+
+            # Saving last modification time.
+            self.__modified_time = soup.find(const.DOC_DT_MODIFIED).string
 
         if not self.__is_injected():
             self.__fuzzy_hash = ssdeep.hash_from_file(path)
@@ -52,11 +56,11 @@ class IdentifierInjector:
         :return: True if identifier is already injected in document, False – otherwise.
         """
         with zipfile.ZipFile(self.__path, 'r') as zip_ref:
-            soup = BeautifulSoup(zip_ref.read(const.APP), 'xml')
-            company_tag = soup.find('Company')
+            soup = BeautifulSoup(zip_ref.read(const.CORE), 'xml')
+            description_tag = soup.find(const.DOC_DC_DESCRIPTION)
 
-            if company_tag is not None and company_tag.string:
-                positions = decode_base64_id(company_tag.string).rsplit()
+            if description_tag is not None and description_tag.string:
+                positions = decode_base64_id(description_tag.string).rsplit()
                 self.__fuzzy_hash = positions[-1]
                 return True
 
@@ -69,21 +73,23 @@ class IdentifierInjector:
         """
         soup: BeautifulSoup = BeautifulSoup()
 
-        with open(f'{const.TEMP_DIR}/{const.APP}', 'r', encoding='utf-8') as app_xml:
+        with open(f'{const.TEMP_DIR}/{const.CORE}', 'r', encoding='utf-8') as app_xml:
             soup = BeautifulSoup(app_xml.read(), 'xml')
 
-        company_tag = soup.find('Company')
-        text_id = f'{self.__file_name} {self.__creator_name} {self.__creation_time} {self.__fuzzy_hash}'
+        description_tag = soup.find(const.DOC_DC_DESCRIPTION)
+        text_id = f'{self.__file_name} {self.__creator_name} {self.__workplace_name} ' \
+                  f'{self.__creation_time} {self.__modified_time} {self.__fuzzy_hash}'
 
         # Inject base64 identifier in company tag if it exists.
-        if company_tag is not None:
-            company_tag.string = encode_base64_id(text_id)
+        if description_tag is not None:
+            description_tag.string = encode_base64_id(text_id)
         else:
-            soup.find("Properties").append(
-                BeautifulSoup(f"<Company>{encode_base64_id(text_id)}</Company>", 'xml')
+            soup.find(const.DOC_CORE_PROPERTIES).append(
+                BeautifulSoup(f"<{const.DOC_DC_DESCRIPTION}>{encode_base64_id(text_id)}</{const.DOC_DC_DESCRIPTION}>",
+                              'xml')
             )
 
-        with open(f'{const.TEMP_DIR}/{const.APP}', 'w', encoding='utf-8') as app_xml:
+        with open(f'{const.TEMP_DIR}/{const.CORE}', 'w', encoding='utf-8') as app_xml:
             app_xml.write(str(soup))
 
     def __set_explicit_fuzzy_hash(self) -> None:
@@ -102,8 +108,8 @@ class IdentifierInjector:
             if keywords_tag is not None:
                 keywords_tag.string = self.__fuzzy_hash
             else:
-                soup.find("cp:coreProperties").append(
-                    BeautifulSoup(f"<cp:keywords>{self.__fuzzy_hash}</cp:keywords>", 'xml')
+                soup.find(const.DOC_CORE_PROPERTIES).append(
+                    BeautifulSoup(f"<{const.DOC_CP_KEYWORDS}>{self.__fuzzy_hash}</{const.DOC_CP_KEYWORDS}>", 'xml')
                 )
 
         with open(f'{const.TEMP_DIR}/{const.CORE}', 'w', encoding='utf-8') as core_xml:
