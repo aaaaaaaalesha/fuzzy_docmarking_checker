@@ -24,3 +24,4 @@ IS_HASH_INTEGRITY = 'Hash integrity'
 
 MATCH = '☑'
 MISMATCH = '☒'
+NOT_FOUND = 'information_not_found'

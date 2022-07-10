@@ -36,22 +36,26 @@ class IdentifierInjector:
         with zipfile.ZipFile(path, 'r') as zip_ref:
             soup = BeautifulSoup(zip_ref.read(const.CORE), 'xml')
 
-            # Saving name of creator.
-            self.__creator_name = soup.find(const.DOC_CREATOR_TAG).string
+        # Saving name of creator.
+        tag = soup.find(const.DOC_CREATOR_TAG)
+        self.__creator_name = tag.string if tag is not None and tag.string else const.NOT_FOUND
 
-            # Saving name of workplace.
-            self.__workplace_name = socket.gethostname()
+        # Saving name of workplace.
+        self.__workplace_name = socket.gethostname()
 
-            # Saving creation time.
-            self.__creation_time = soup.find(const.DOC_DT_CREATED).string
+        # Saving creation time.
+        tag = soup.find(const.DOC_DT_CREATED)
+        self.__creation_time = tag.string if tag is not None and tag.string else const.NOT_FOUND
 
-            # Saving last modification time.
-            self.__modified_time = soup.find(const.DOC_DT_MODIFIED).string
+        # Saving last modification time.
+        tag = soup.find(const.DOC_DT_MODIFIED)
+        self.__modified_time = tag.string if tag is not None and tag.string else const.NOT_FOUND
 
         if not self.__is_injected():
             self.__fuzzy_hash = ssdeep.hash_from_file(path)
 
     def __is_injected(self) -> bool:
+
         """
         Method checks is identifier already injected.
         :return: True if identifier is already injected in document, False – otherwise.
@@ -71,10 +75,12 @@ class IdentifierInjector:
         return False
 
     def __write_identifier(self) -> None:
+
         """
         Writes identifier in docProps/core.xml in tag <dc:description> like base64-string.
         :return: None
         """
+
         soup: BeautifulSoup = BeautifulSoup()
 
         with open(f'{const.TEMP_DIR}/{const.CORE}', 'r', encoding='utf-8') as core_xml:
@@ -103,10 +109,12 @@ class IdentifierInjector:
             core_xml.write(str(soup))
 
     def __set_explicit_fuzzy_hash(self) -> None:
+
         """
         Setting fuzzy hash explicitly in docProps/core.xml in tag <cp:keywords>.
         :return: None
         """
+
         soup: BeautifulSoup = BeautifulSoup()
 
         with open(f'{const.TEMP_DIR}/{const.CORE}', 'r', encoding='utf-8') as core_xml:
@@ -131,12 +139,14 @@ class IdentifierInjector:
             core_xml.write(str(soup))
 
     def inject_identifier(self, out_folder: str) -> None:
+
         """
         Injects base64-string representation of identifier into document.
 
         :param out_folder: path for writing documents with injected
         :return: None.
         """
+
         if not os.path.exists(self.__path):
             raise FileNotFoundError(f'File {self.__file_name} is no longer available at {self.__path}.')
 

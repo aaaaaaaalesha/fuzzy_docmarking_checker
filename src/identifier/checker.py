@@ -17,6 +17,12 @@ class NoIdentifierException(Exception):
 
 
 def __parse_fields(words_: list, out_dict_: dict) -> None:
+    """
+    Parses all fields from words_ into out_dict_.
+    :param words_: list of fields in injected identifier
+    :param out_dict_: dict for stacking fields
+    :return: None
+    """
     creator_index = 0
     for i in range(len(words_)):
         out_dict_[const.FILE_NAME] += words_[i]
@@ -33,7 +39,25 @@ def __parse_fields(words_: list, out_dict_: dict) -> None:
         out_dict_[const.CREATOR_NAME] += words_[i]
 
 
+def __match_check(attr1, attr2) -> str:
+    """
+    Builds message for the right column of the matching result table.
+    :param attr1: first attribute in comparison
+    :param attr2: second attribute in comparison
+    :return: resulted message
+    """
+    if all((attr1 != const.NOT_FOUND, attr2 != const.NOT_FOUND)) and attr1 == attr2:
+        return f"{const.MATCH} matches"
+
+    return f"{const.MISMATCH} mismatches"
+
+
 def parse_document_identifier(file: str) -> dict:
+    """
+    Parse file identifier in dict of information fields.
+    :param file: path to file
+    :return: fields dict
+    """
     out_dict = {
         const.FILE_NAME: '',
         const.CREATOR_NAME: '',
@@ -71,11 +95,13 @@ def parse_document_identifier(file: str) -> dict:
     return out_dict
 
 
-def match_check(s1, s2) -> str:
-    return f"{const.MATCH} matches" if s1 == s2 else f"{const.MISMATCH} mismatches"
-
-
 def identity_check(file1: str, file2: str) -> str:
+    """
+    Builds string with table of matching files' identifiers data.
+    :param file1: first file path
+    :param file2: second file path
+    :return: resulted sting table
+    """
     table = PrettyTable(
         field_names=('', 'Document 1', 'Document 2', 'Matching')
     )
@@ -86,10 +112,10 @@ def identity_check(file1: str, file2: str) -> str:
                  const.MODIFIED_TIME, const.FUZZY_HASH, const.IS_HASH_INTEGRITY)
     for name in row_names:
         row = [name, out1[name], out2[name]]
-        if name == const.FUZZY_HASH:
-            row.append(f'{ssdeep_cmp(out1[name], out2[name])} %')
+        if name != const.FUZZY_HASH:
+            row.append(__match_check(out1[name], out2[name]))
         else:
-            row.append(match_check(out1[name], out2[name]))
+            row.append(f'{ssdeep_cmp(out1[name], out2[name])} %')
 
         table.add_row(row)
 
