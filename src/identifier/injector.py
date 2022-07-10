@@ -60,7 +60,10 @@ class IdentifierInjector:
             description_tag = soup.find(const.DOC_DC_DESCRIPTION)
 
             if description_tag is not None and description_tag.string:
-                positions = decode_base64_id(description_tag.string).rsplit()
+                try:
+                    positions = decode_base64_id(description_tag.string).rsplit()
+                except UnicodeDecodeError:
+                    return False
                 self.__fuzzy_hash = positions[-1]
                 return True
 
@@ -84,7 +87,8 @@ class IdentifierInjector:
         if description_tag is not None:
             description_tag.string = encode_base64_id(text_id)
         else:
-            soup.find(const.DOC_CORE_PROPERTIES).append(
+            soup.find(const.DOC_CORE_PROPERTIES).insert_after(
+                soup.find(const.DOC_CP_KEYWORDS),
                 BeautifulSoup(f"<{const.DOC_DC_DESCRIPTION}>{encode_base64_id(text_id)}</{const.DOC_DC_DESCRIPTION}>",
                               'xml')
             )
@@ -122,6 +126,7 @@ class IdentifierInjector:
         :param out_folder: path for writing documents with injected
         :return: None.
         """
+        # TODO: В рпз2 не инжектится дескриптион, фиксани
         if not os.path.exists(self.__path):
             raise FileNotFoundError(f'File {self.__file_name} is no longer available at {self.__path}.')
 
@@ -166,8 +171,6 @@ def decode_base64_id(text: str) -> str:
     :param text: base64-string;
     :return: decoded representable string
     """
-    base64_bytes = base64.b64decode(
-        text.encode('utf-8')
-    )
+    base64_bytes = base64.b64decode(text.encode('utf-8'))
 
     return base64_bytes.decode('utf-8')

@@ -50,7 +50,7 @@ def parse_document_identifier(file: str) -> dict:
         )
 
     with zipfile.ZipFile(file, 'r') as zip_ref:
-        soup = BeautifulSoup(zip_ref.read(const.APP), 'xml')
+        soup = BeautifulSoup(zip_ref.read(const.CORE), 'xml')
         description_tag = soup.find(const.DOC_DC_DESCRIPTION)
 
         if description_tag is not None and description_tag.string:
