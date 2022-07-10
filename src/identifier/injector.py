@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 
 import src.constants as const
 import src.ssdeep as ssdeep
-from src.utils import encode_base64_id, decode_base64_id
+import src.utils as utils
 
 
 class IncorrectExtensionException(Exception):
@@ -62,7 +62,7 @@ class IdentifierInjector:
 
             if description_tag is not None and description_tag.string:
                 try:
-                    positions = decode_base64_id(description_tag.string).rsplit()
+                    positions = utils.decode_base64_id(description_tag.string).rsplit()
                 except UnicodeDecodeError:
                     return False
                 self.__fuzzy_hash = positions[-1]
@@ -86,13 +86,18 @@ class IdentifierInjector:
 
         # Inject base64 identifier in company tag if it exists.
         if description_tag is not None:
-            description_tag.string = encode_base64_id(text_id)
+            description_tag.string = utils.encode_base64_id(text_id)
         else:
-            soup.find(const.DOC_CORE_PROPERTIES).insert_after(
-                soup.find(const.DOC_CP_KEYWORDS),
-                BeautifulSoup(f"<{const.DOC_DC_DESCRIPTION}>{encode_base64_id(text_id)}</{const.DOC_DC_DESCRIPTION}>",
-                              'xml')
-            )
+            soup.find(const.DOC_CORE_PROPERTIES).append(
+                BeautifulSoup(
+                    f'<{const.DOC_DC_DESCRIPTION}>{utils.encode_base64_id(text_id)}</{const.DOC_DC_DESCRIPTION}>',
+                    'xml',
+                ))
+
+            # Tag needs correction, because of wrong parsing of bs4.
+            tag = soup.find('description')
+            if tag is not None:
+                tag.name = const.DOC_DC_DESCRIPTION
 
         with open(f'{const.TEMP_DIR}/{const.CORE}', 'w', encoding='utf-8') as core_xml:
             core_xml.write(str(soup))
@@ -117,6 +122,11 @@ class IdentifierInjector:
                     BeautifulSoup(f"<{const.DOC_CP_KEYWORDS}>{self.__fuzzy_hash}</{const.DOC_CP_KEYWORDS}>", 'xml')
                 )
 
+                # Tag needs correction, because of wrong parsing of bs4.
+                tag = soup.find('keywords')
+                if tag is not None:
+                    tag.name = const.DOC_CP_KEYWORDS
+
         with open(f'{const.TEMP_DIR}/{const.CORE}', 'w', encoding='utf-8') as core_xml:
             core_xml.write(str(soup))
 
@@ -136,9 +146,9 @@ class IdentifierInjector:
         with zipfile.ZipFile(self.__path, 'r') as zip_ref:
             zip_ref.extractall(const.TEMP_DIR)
 
-        self.__write_identifier()
-
         self.__set_explicit_fuzzy_hash()
+
+        self.__write_identifier()
 
         subprocess.run(
             f'cd {const.TEMP_DIR} && zip -r {self.__file_name} .'.split(),

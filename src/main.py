@@ -3,8 +3,8 @@
 from identifier import injector, checker
 
 if __name__ == '__main__':
-    path1 = "../target1.docx"
-    path2 = "../target2.docx"
+    path1 = "../rpz1.docx"
+    path2 = "../rpz2.docx"
 
     id_1 = injector.IdentifierInjector(path1)
     id_2 = injector.IdentifierInjector(path2)
