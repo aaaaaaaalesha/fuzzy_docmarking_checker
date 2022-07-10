@@ -1,16 +1,35 @@
 # Copyright 2022 aaaaaaaalesha
+import sys
 
-from identifier import injector, checker
+from src.identifier import injector, checker
 
 import argparse
 
-parser = argparse.ArgumentParser()
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i', '--inject', type=str, nargs='+',
+                        help='Inject identifier in document(s).')
+    parser.add_argument('-o', '--output', type=str, nargs=1,
+                        help='Destination folder for saving injected document(s)')
+    parser.add_argument('-c', '--compare', type=str, nargs=2,
+                        help='Compare two documents by their identifiers.')
+
+    args = parser.parse_args()
+    if args.inject:
+        if not args.output:
+            parser.error("Named argument -o (--output) required.")
+            sys.exit(1)
+        for path in args.inject:
+            id_ = injector.IdentifierInjector(path)
+            id_.inject_identifier(*args.output)
+            print(f"Identifier was injected successfully in document {path}")
+        print("Completed")
+    elif args.compare:
+        print(checker.identity_check(*args.compare))
+    else:
+        parser.print_help()
+
 
 if __name__ == '__main__':
-    id_1 = injector.IdentifierInjector("../rpz1.xlsx")
-    id_2 = injector.IdentifierInjector("../rpz2.xlsx")
-
-    id_1.inject_identifier('../out/')
-    id_2.inject_identifier('../out/')
-
-    print(checker.identity_check('../out/rpz1.xlsx', '../out/rpz2.xlsx'))
+    main()
