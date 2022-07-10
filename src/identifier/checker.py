@@ -7,7 +7,8 @@ from bs4 import BeautifulSoup
 from prettytable import PrettyTable
 
 import src.constants as const
-from src.identifier.injector import decode_base64_id, IncorrectExtensionException
+from src.utils import decode_base64_id
+from src.identifier.injector import IncorrectExtensionException
 from src.ssdeep import compare as ssdeep_cmp
 
 

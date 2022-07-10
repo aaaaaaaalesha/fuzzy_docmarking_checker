@@ -3,8 +3,8 @@
 from identifier import injector, checker
 
 if __name__ == '__main__':
-    path1 = "B:\\github\\fuzzy_docmarking_checker\\rpz1.docx"
-    path2 = "B:\\github\\fuzzy_docmarking_checker\\rpz2.docx"
+    path1 = "../target1.docx"
+    path2 = "../target2.docx"
 
     id_1 = injector.IdentifierInjector(path1)
     id_2 = injector.IdentifierInjector(path2)

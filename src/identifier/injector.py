@@ -1,5 +1,5 @@
 # Copyright 2022 aaaaaaaalesha
-import base64
+
 import os
 import socket
 import subprocess
@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 
 import src.constants as const
 import src.ssdeep as ssdeep
+from src.utils import encode_base64_id, decode_base64_id
 
 
 class IncorrectExtensionException(Exception):
@@ -71,13 +72,13 @@ class IdentifierInjector:
 
     def __write_identifier(self) -> None:
         """
-        Writes identifier in docProps/app.xml in tag <Company> like base64-string.
+        Writes identifier in docProps/core.xml in tag <dc:description> like base64-string.
         :return: None
         """
         soup: BeautifulSoup = BeautifulSoup()
 
-        with open(f'{const.TEMP_DIR}/{const.CORE}', 'r', encoding='utf-8') as app_xml:
-            soup = BeautifulSoup(app_xml.read(), 'xml')
+        with open(f'{const.TEMP_DIR}/{const.CORE}', 'r', encoding='utf-8') as core_xml:
+            soup = BeautifulSoup(core_xml.read(), 'xml')
 
         description_tag = soup.find(const.DOC_DC_DESCRIPTION)
         text_id = f'{self.__file_name} {self.__creator_name} {self.__workplace_name} ' \
@@ -93,8 +94,8 @@ class IdentifierInjector:
                               'xml')
             )
 
-        with open(f'{const.TEMP_DIR}/{const.CORE}', 'w', encoding='utf-8') as app_xml:
-            app_xml.write(str(soup))
+        with open(f'{const.TEMP_DIR}/{const.CORE}', 'w', encoding='utf-8') as core_xml:
+            core_xml.write(str(soup))
 
     def __set_explicit_fuzzy_hash(self) -> None:
         """
@@ -126,7 +127,6 @@ class IdentifierInjector:
         :param out_folder: path for writing documents with injected
         :return: None.
         """
-        # TODO: В рпз2 не инжектится дескриптион, фиксани
         if not os.path.exists(self.__path):
             raise FileNotFoundError(f'File {self.__file_name} is no longer available at {self.__path}.')
 
@@ -142,7 +142,7 @@ class IdentifierInjector:
 
         subprocess.run(
             f'cd {const.TEMP_DIR} && zip -r {self.__file_name} .'.split(),
-            shell=True,
+            shell=True, check=True
         )
 
         if os.path.exists(f'{out_folder}/{self.__file_name}'):
@@ -150,27 +150,3 @@ class IdentifierInjector:
 
         shutil.move(f'{const.TEMP_DIR}/{self.__file_name}', out_folder)
         shutil.rmtree(const.TEMP_DIR)
-
-
-def encode_base64_id(text: str) -> str:
-    """
-    Encodes identifier to base64-string.
-    :param text: string;
-    :return: base64 string representation
-    """
-    base64_bytes = base64.b64encode(
-        text.encode('utf-8')
-    )
-
-    return base64_bytes.decode('utf-8')
-
-
-def decode_base64_id(text: str) -> str:
-    """
-    Decodes base64-string to representable string.
-    :param text: base64-string;
-    :return: decoded representable string
-    """
-    base64_bytes = base64.b64decode(text.encode('utf-8'))
-
-    return base64_bytes.decode('utf-8')
