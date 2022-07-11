@@ -4,7 +4,6 @@ VALID_EXTENSIONS = ('.docx', '.xlsx')
 
 TEMP_DIR = '../tempdir'
 
-APP = 'docProps/app.xml'
 CORE = 'docProps/core.xml'
 
 DOC_CREATOR_TAG = 'dc:creator'

@@ -93,8 +93,7 @@ def parse_document_identifier(file: str) -> dict:
         keywords_tag = soup.find(const.DOC_CP_KEYWORDS)
 
         if keywords_tag is not None:
-            out_dict[const.IS_HASH_INTEGRITY] = \
-                keywords_tag.string == out_dict[const.FUZZY_HASH]
+            out_dict[const.IS_HASH_INTEGRITY] = keywords_tag.string == out_dict[const.FUZZY_HASH]
 
     return out_dict
 

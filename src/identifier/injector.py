@@ -23,10 +23,10 @@ class IdentifierInjector:
     def __init__(self, path: str):
         self.__path = path
 
-        extension = os.path.splitext(path)[1]
-        if extension not in const.VALID_EXTENSIONS:
+        self.__extension = os.path.splitext(path)[1]
+        if self.__extension not in const.VALID_EXTENSIONS:
             raise IncorrectExtensionException(
-                f'Valid file should have extension from {const.VALID_EXTENSIONS}. Not {extension}.'
+                f'Valid file should have extension from {const.VALID_EXTENSIONS}. Not {self.__extension}.'
             )
         self.__path = path
 
@@ -52,7 +52,7 @@ class IdentifierInjector:
         self.__modified_time = tag.string if tag is not None and tag.string else const.NOT_FOUND
 
         if not self.__is_injected():
-            self.__fuzzy_hash = ssdeep.hash_from_file(path)
+            self.__fuzzy_hash = self.__get_fuzzy_hash()
 
     def __is_injected(self) -> bool:
 
@@ -73,6 +73,33 @@ class IdentifierInjector:
                 return True
 
         return False
+
+    def __get_fuzzy_hash(self) -> str:
+        """
+        Returns fuzzy hash, of .docx/.xlsx file.
+        :return: str-fuzzy hash.
+        """
+        string_builder = list()
+        with zipfile.ZipFile(self.__path, 'r') as zip_ref:
+            zip_ref.extractall(const.TEMP_DIR)
+
+        source_dir = const.TEMP_DIR
+        if self.__extension == '.docx':
+            source_dir += '/word'
+        else:  # if '.xlsx'
+            source_dir += '/xl'
+
+        # Collecting all files in a directory
+        files_list = utils.get_files_list(source_dir)
+        if self.__extension == '.xlsx':
+            files_list += utils.get_files_list(f'{source_dir}/worksheets')
+        for file in files_list:
+            with open(file, encoding='utf-8') as f:
+                string_builder.append(f.read())
+
+        shutil.rmtree(const.TEMP_DIR)
+
+        return ssdeep.hash(''.join(string_builder))
 
     def __write_identifier(self) -> None:
 
@@ -143,7 +170,7 @@ class IdentifierInjector:
         """
         Injects base64-string representation of identifier into document.
 
-        :param out_folder: path for writing documents with injected
+        :param: out_folder: path for writing documents with injected
         :return: None.
         """
 
