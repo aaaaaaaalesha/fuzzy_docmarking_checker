@@ -25,6 +25,8 @@ def __parse_fields(words_: list, out_dict_: dict) -> None:
     """
     creator_index = 0
     for i in range(len(words_)):
+        if i != 0:
+            out_dict_[const.FILE_NAME] += ' '
         out_dict_[const.FILE_NAME] += words_[i]
         if words_[i].endswith(const.VALID_EXTENSIONS):
             creator_index = i + 1
@@ -36,6 +38,8 @@ def __parse_fields(words_: list, out_dict_: dict) -> None:
     out_dict_[const.WORKPLACE_NAME] = words_[-4]
 
     for i in range(creator_index, len(words_) - 4):
+        if i != creator_index:
+            out_dict_[const.CREATOR_NAME] += ' '
         out_dict_[const.CREATOR_NAME] += words_[i]
 
 
@@ -47,9 +51,9 @@ def __match_check(attr1, attr2) -> str:
     :return: resulted message
     """
     if all((attr1 != const.NOT_FOUND, attr2 != const.NOT_FOUND)) and attr1 == attr2:
-        return f"{const.MATCH} matches"
+        return const.MATCH
 
-    return f"{const.MISMATCH} mismatches"
+    return const.MISMATCH
 
 
 def parse_document_identifier(file: str) -> dict:
@@ -103,7 +107,7 @@ def identity_check(file1: str, file2: str) -> str:
     :return: resulted sting table
     """
     table = PrettyTable(
-        field_names=('', 'Document 1', 'Document 2', 'Matching')
+        field_names=('', 'First Document', 'Second Document', 'Matching')
     )
     out1: dict = parse_document_identifier(file1)
     out2: dict = parse_document_identifier(file2)

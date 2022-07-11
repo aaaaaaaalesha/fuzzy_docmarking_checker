@@ -22,6 +22,6 @@ MODIFIED_TIME = 'Last modified time'
 FUZZY_HASH = 'Fuzzy hash'
 IS_HASH_INTEGRITY = 'Hash integrity'
 
-MATCH = '☑'
-MISMATCH = '☒'
+MATCH = '[v]'
+MISMATCH = '[ ]'
 NOT_FOUND = 'information_not_found'

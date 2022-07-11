@@ -150,7 +150,10 @@ class IdentifierInjector:
         if not os.path.exists(self.__path):
             raise FileNotFoundError(f'File {self.__file_name} is no longer available at {self.__path}.')
 
-        if os.path.exists(out_folder) and not os.path.isdir(out_folder):
+        if not os.path.exists(out_folder):
+            os.makedirs(out_folder)
+
+        if not os.path.isdir(out_folder):
             raise NotADirectoryError(f'Path "{out_folder}" should be accessible directory to write injected documents.')
 
         with zipfile.ZipFile(self.__path, 'r') as zip_ref:
