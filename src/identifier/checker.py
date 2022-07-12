@@ -75,7 +75,7 @@ def parse_document_identifier(file: str) -> dict:
     extension = os.path.splitext(file)[1]
     if extension not in const.VALID_EXTENSIONS:
         raise IncorrectExtensionException(
-            f'Valid file should have extension from {const.VALID_EXTENSIONS}. Not {extension}.'
+            f'Valid file should have extension like {", ".join(const.VALID_EXTENSIONS)}. Not {extension}.'
         )
 
     with zipfile.ZipFile(file, 'r') as zip_ref:

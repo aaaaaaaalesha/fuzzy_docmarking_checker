@@ -26,7 +26,7 @@ class IdentifierInjector:
         self.__extension = os.path.splitext(path)[1]
         if self.__extension not in const.VALID_EXTENSIONS:
             raise IncorrectExtensionException(
-                f'Valid file should have extension from {const.VALID_EXTENSIONS}. Not {self.__extension}.'
+                f'Valid file should have extension like {", ".join(const.VALID_EXTENSIONS)}. Not {self.__extension}.'
             )
         self.__path = path
 
@@ -86,14 +86,14 @@ class IdentifierInjector:
 
         source_dir = tempdir
         if self.__extension == '.docx':
-            source_dir += '/word'
+            source_dir += f'{os.sep}word'
         else:  # if '.xlsx'
-            source_dir += '/xl'
+            source_dir += f'{os.sep}xl'
 
         # Collecting all files in a directory
         files_list = utils.get_files_list(source_dir)
         if self.__extension == '.xlsx':
-            files_list += utils.get_files_list(f'{source_dir}/worksheets')
+            files_list += utils.get_files_list(f'{source_dir}{os.sep}worksheets')
         for file in files_list:
             with open(file, encoding='utf-8') as f:
                 string_builder.append(f.read())
@@ -111,7 +111,7 @@ class IdentifierInjector:
         """
         soup: BeautifulSoup = BeautifulSoup()
 
-        with open(f'{tempdir_path}/{const.CORE}', 'r', encoding='utf-8') as core_xml:
+        with open(f'{tempdir_path}{os.sep}{const.CORE}', 'r', encoding='utf-8') as core_xml:
             soup = BeautifulSoup(core_xml.read(), 'xml')
 
         description_tag = soup.find(const.DOC_DC_DESCRIPTION)
@@ -133,7 +133,7 @@ class IdentifierInjector:
             if tag is not None:
                 tag.name = const.DOC_DC_DESCRIPTION
 
-        with open(f'{tempdir_path}/{const.CORE}', 'w', encoding='utf-8') as core_xml:
+        with open(f'{tempdir_path}{os.sep}{const.CORE}', 'w', encoding='utf-8') as core_xml:
             core_xml.write(str(soup))
 
     def __set_explicit_fuzzy_hash(self, tempdir_path: str) -> None:
@@ -145,8 +145,9 @@ class IdentifierInjector:
         """
 
         soup: BeautifulSoup = BeautifulSoup()
+        core_path = f'{tempdir_path}{os.sep}{const.CORE}'
 
-        with open(f'{tempdir_path}/{const.CORE}', 'r', encoding='utf-8') as core_xml:
+        with open(core_path, 'r', encoding='utf-8') as core_xml:
             soup = BeautifulSoup(core_xml.read(), 'xml')
 
             keywords_tag = soup.find(const.DOC_CP_KEYWORDS)
@@ -164,7 +165,7 @@ class IdentifierInjector:
                 if tag is not None:
                     tag.name = const.DOC_CP_KEYWORDS
 
-        with open(f'{tempdir_path}/{const.CORE}', 'w', encoding='utf-8') as core_xml:
+        with open(core_path, 'w', encoding='utf-8') as core_xml:
             core_xml.write(str(soup))
 
     def inject_identifier(self, out_folder: str) -> None:
@@ -194,6 +195,6 @@ class IdentifierInjector:
 
         self.__write_identifier(tempdir)
 
-        utils.zip_path_to_file(tempdir, f'{out_folder}/{self.__file_name}')
+        utils.zip_path_to_file(tempdir, f'{out_folder}{os.sep}{self.__file_name}')
 
         shutil.rmtree(tempdir)
