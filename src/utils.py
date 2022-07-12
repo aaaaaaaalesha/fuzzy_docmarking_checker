@@ -2,6 +2,7 @@
 
 import base64
 import os
+import zipfile
 
 
 def encode_base64_id(text: str) -> str:
@@ -41,3 +42,24 @@ def get_files_list(path: str) -> list:
             out_list.append(p)
 
     return out_list
+
+
+def zip_path_to_file(dir_path: str, file_path: str) -> None:
+    """
+    Zips all files and subdirectories from directory path in file_path
+    :param dir_path: path to directory for zipping
+    :param file_path: out file path for zipping
+    :return: None
+    """
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
+    if not os.path.isdir(dir_path):
+        raise NotADirectoryError(f'{dir_path} is not directory.')
+
+    with zipfile.ZipFile(file_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for root, dirs, files in os.walk(dir_path):
+            for file in files:
+                filename = os.path.join(root, file)
+                relpath = os.path.relpath(os.path.join(root, file), dir_path)
+                zipf.write(filename, relpath)

@@ -190,13 +190,6 @@ class IdentifierInjector:
 
         self.__write_identifier()
 
-        subprocess.run(
-            f'cd {const.TEMP_DIR} && zip -r {self.__file_name} .'.split(),
-            shell=True, check=True
-        )
+        utils.zip_path_to_file(f'{const.TEMP_DIR}', f'{out_folder}/{self.__file_name}')
 
-        if os.path.exists(f'{out_folder}/{self.__file_name}'):
-            os.remove(f'{out_folder}/{self.__file_name}')
-
-        shutil.move(f'{const.TEMP_DIR}/{self.__file_name}', out_folder)
         shutil.rmtree(const.TEMP_DIR)
