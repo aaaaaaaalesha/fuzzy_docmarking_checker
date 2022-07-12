@@ -2,8 +2,6 @@
 
 VALID_EXTENSIONS = ('.docx', '.xlsx')
 
-TEMP_DIR = '../tempdir'
-
 CORE = 'docProps/core.xml'
 
 DOC_CREATOR_TAG = 'dc:creator'

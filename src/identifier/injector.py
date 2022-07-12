@@ -2,11 +2,11 @@
 
 import os
 import socket
-import subprocess
 import zipfile
 import shutil
 
 from bs4 import BeautifulSoup
+from tempfile import mkdtemp
 
 import src.constants as const
 import src.ssdeep as ssdeep
@@ -80,10 +80,11 @@ class IdentifierInjector:
         :return: str-fuzzy hash.
         """
         string_builder = list()
+        tempdir = mkdtemp()
         with zipfile.ZipFile(self.__path, 'r') as zip_ref:
-            zip_ref.extractall(const.TEMP_DIR)
+            zip_ref.extractall(tempdir)
 
-        source_dir = const.TEMP_DIR
+        source_dir = tempdir
         if self.__extension == '.docx':
             source_dir += '/word'
         else:  # if '.xlsx'
@@ -97,20 +98,20 @@ class IdentifierInjector:
             with open(file, encoding='utf-8') as f:
                 string_builder.append(f.read())
 
-        shutil.rmtree(const.TEMP_DIR)
+        shutil.rmtree(tempdir)
 
         return ssdeep.hash(''.join(string_builder))
 
-    def __write_identifier(self) -> None:
+    def __write_identifier(self, tempdir_path: str) -> None:
 
         """
         Writes identifier in docProps/core.xml in tag <dc:description> like base64-string.
+        :param tempdir_path: path to temporary directory for working with external of .docx/.xlsx file
         :return: None
         """
-
         soup: BeautifulSoup = BeautifulSoup()
 
-        with open(f'{const.TEMP_DIR}/{const.CORE}', 'r', encoding='utf-8') as core_xml:
+        with open(f'{tempdir_path}/{const.CORE}', 'r', encoding='utf-8') as core_xml:
             soup = BeautifulSoup(core_xml.read(), 'xml')
 
         description_tag = soup.find(const.DOC_DC_DESCRIPTION)
@@ -132,19 +133,20 @@ class IdentifierInjector:
             if tag is not None:
                 tag.name = const.DOC_DC_DESCRIPTION
 
-        with open(f'{const.TEMP_DIR}/{const.CORE}', 'w', encoding='utf-8') as core_xml:
+        with open(f'{tempdir_path}/{const.CORE}', 'w', encoding='utf-8') as core_xml:
             core_xml.write(str(soup))
 
-    def __set_explicit_fuzzy_hash(self) -> None:
+    def __set_explicit_fuzzy_hash(self, tempdir_path: str) -> None:
 
         """
         Setting fuzzy hash explicitly in docProps/core.xml in tag <cp:keywords>.
+        :param tempdir_path: path to temporary directory for working with external of .docx/.xlsx file
         :return: None
         """
 
         soup: BeautifulSoup = BeautifulSoup()
 
-        with open(f'{const.TEMP_DIR}/{const.CORE}', 'r', encoding='utf-8') as core_xml:
+        with open(f'{tempdir_path}/{const.CORE}', 'r', encoding='utf-8') as core_xml:
             soup = BeautifulSoup(core_xml.read(), 'xml')
 
             keywords_tag = soup.find(const.DOC_CP_KEYWORDS)
@@ -162,7 +164,7 @@ class IdentifierInjector:
                 if tag is not None:
                     tag.name = const.DOC_CP_KEYWORDS
 
-        with open(f'{const.TEMP_DIR}/{const.CORE}', 'w', encoding='utf-8') as core_xml:
+        with open(f'{tempdir_path}/{const.CORE}', 'w', encoding='utf-8') as core_xml:
             core_xml.write(str(soup))
 
     def inject_identifier(self, out_folder: str) -> None:
@@ -174,6 +176,8 @@ class IdentifierInjector:
         :return: None.
         """
 
+        tempdir = mkdtemp()
+
         if not os.path.exists(self.__path):
             raise FileNotFoundError(f'File {self.__file_name} is no longer available at {self.__path}.')
 
@@ -184,12 +188,12 @@ class IdentifierInjector:
             raise NotADirectoryError(f'Path "{out_folder}" should be accessible directory to write injected documents.')
 
         with zipfile.ZipFile(self.__path, 'r') as zip_ref:
-            zip_ref.extractall(const.TEMP_DIR)
+            zip_ref.extractall(tempdir)
 
-        self.__set_explicit_fuzzy_hash()
+        self.__set_explicit_fuzzy_hash(tempdir)
 
-        self.__write_identifier()
+        self.__write_identifier(tempdir)
 
-        utils.zip_path_to_file(f'{const.TEMP_DIR}', f'{out_folder}/{self.__file_name}')
+        utils.zip_path_to_file(tempdir, f'{out_folder}/{self.__file_name}')
 
-        shutil.rmtree(const.TEMP_DIR)
+        shutil.rmtree(tempdir)
