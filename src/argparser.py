@@ -23,6 +23,8 @@ def launch():
                              'the identifier will be injected in all files with the desired extension.')
     parser.add_argument('-o', '--output', type=str, nargs=1,
                         help='Destination folder for saving injected document(s)')
+    parser.add_argument('-r', '--recursive', action='store_true',
+                        help='Collects file for injection in folder recursively.')
     parser.add_argument('-c', '--compare', type=str, nargs='+',
                         help='Compare first file with the next passed file(s) by their identifiers.')
 
@@ -39,6 +41,16 @@ def launch():
 
             if not os.path.isdir(path):
                 injection(path, *args.output)
+                continue
+
+            if args.recursive:
+                for dirpath, dirs, files in os.walk(path):
+                    for file in files:
+                        path_to_file = os.path.join(path, dirpath, file)
+                        extension = os.path.splitext(path_to_file)[1]
+                        if extension in VALID_EXTENSIONS:
+                            injection(path_to_file, *args.output)
+
                 continue
 
             for file in os.listdir(path):
