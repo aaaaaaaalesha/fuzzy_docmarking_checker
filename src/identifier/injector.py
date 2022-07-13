@@ -218,6 +218,11 @@ class IdentifierInjector:
         id_text = f"{utils.encode_base64_id(self.__file_name)}_{self.__avghash}_{self.__dhash}_{self.__phash}_" \
                   f"{self.__colorhash}{self.__extension}"
         shutil.copy2(self.__path, out)
+
+        new_path_name = os.path.join(out, id_text)
+        if os.path.exists(new_path_name):
+            os.remove(new_path_name)
+
         os.rename(
             os.path.join(out, self.__file_name),
             os.path.join(out, id_text)

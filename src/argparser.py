@@ -49,7 +49,7 @@ def launch():
 
         print("Injection completed")
 
-    if args.compare is not None:
+    elif args.compare is not None:
         lhs = args.compare[0]
         if not os.path.exists(lhs):
             print(f"Path {lhs} does not exist")
