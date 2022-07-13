@@ -131,3 +131,6 @@ dmypy.json
 # Side files
 *.docx
 *.xlsx
+*.png
+*.jpg
+*.bmp
