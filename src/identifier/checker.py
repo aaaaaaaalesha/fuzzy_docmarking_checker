@@ -142,11 +142,14 @@ def _parse_image_identifier(img_file: str) -> dict:
     :return: fields dict
     """
     filename = os.path.basename(os.path.splitext(img_file)[0])
-    fields = filename.split('_', maxsplit=4)[1:]
-    avghash, dhash, phash, = map(imagehash.hex_to_hash, fields[:-1])
-    colorhash = imagehash.hex_to_flathash(fields[-1], 2)
+    # Take all instead defaulthash.
+    fields = filename.split('_', maxsplit=5)
 
-    return dict(zip(const.IMG_FIELDS, (avghash, dhash, phash, colorhash)))
+    from_file = decode_base64_id(fields[0])
+    avghash, dhash, phash, = map(imagehash.hex_to_hash, fields[1:4])
+    colorhash = imagehash.hex_to_flathash(fields[4], 2)
+
+    return dict(zip(const.IMG_FIELDS, (from_file, avghash, dhash, phash, colorhash)))
 
 
 def __get_document_fields(words_: list, out_dict_: dict) -> None:

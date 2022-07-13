@@ -33,12 +33,14 @@ DOC_FIELDS = (
     IS_HASH_INTEGRITY,
 )
 
+FROM_FILE = 'Generated from file'
 AVG_HASH = 'Average hash'
 DIFF_HASH = 'Difference hash'
 PERC_HASH = 'Perceptual hash'
 COLOR_HASH = 'HSV color hash'
 
 IMG_FIELDS = (
+    FROM_FILE,
     AVG_HASH,
     DIFF_HASH,
     PERC_HASH,

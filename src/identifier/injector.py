@@ -215,7 +215,8 @@ class IdentifierInjector:
         :param out: path for writing documents with injected id
         :return: None
         """
-        id_text = f"{self.__defaulthash}_{self.__avghash}_{self.__dhash}_{self.__phash}_{self.__colorhash}{self.__extension}"
+        id_text = f"{utils.encode_base64_id(self.__file_name)}_{self.__avghash}_{self.__dhash}_{self.__phash}_" \
+                  f"{self.__colorhash}{self.__extension}"
         shutil.copy2(self.__path, out)
         os.rename(
             os.path.join(out, self.__file_name),
