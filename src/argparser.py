@@ -49,6 +49,15 @@ def launch():
 
         print("Completed")
     elif args.compare:
-        print(checker.identity_check(*args.compare))
+        path1, path2 = args.compare[0], args.compare[1],
+        if not os.path.exists(path1):
+            print(f"Path {path1} does not exist")
+            exit(1)
+
+        if not os.path.exists(path2):
+            print(f"Path {path2} does not exist")
+            exit(1)
+
+        print(checker.identity_check(path1, path2))
     else:
         parser.print_help()

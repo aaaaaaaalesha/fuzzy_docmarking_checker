@@ -6,7 +6,9 @@ import zipfile
 import shutil
 
 from bs4 import BeautifulSoup
+from imagehash import average_hash, dhash, phash, colorhash
 from tempfile import mkdtemp
+from PIL import Image
 
 import src.constants as const
 import src.ssdeep as ssdeep
@@ -33,7 +35,17 @@ class IdentifierInjector:
         # Saving document name.
         self.__file_name = os.path.basename(path)
 
-        with zipfile.ZipFile(path, 'r') as zip_ref:
+        if self.__extension in const.DOC_EXTENSIONS:
+            self.__collect_document_fields()
+        else:
+            self.__collect_img_fields()
+
+    def __collect_document_fields(self) -> None:
+        """
+        Collects all needed fields for document.
+        :return: None
+        """
+        with zipfile.ZipFile(self.__path, 'r') as zip_ref:
             soup = BeautifulSoup(zip_ref.read(const.CORE), 'xml')
 
         # Saving name of creator.
@@ -54,10 +66,21 @@ class IdentifierInjector:
         if not self.__is_injected():
             self.__fuzzy_hash = self.__get_fuzzy_hash()
 
-    def __is_injected(self) -> bool:
-
+    def __collect_img_fields(self) -> None:
         """
-        Method checks is identifier already injected.
+        Collects all needed fields for image.
+        :return: None
+        """
+        with Image.open(self.__path) as img:
+            self.__defaulthash = hash(self.__path)
+            self.__avghash = str(average_hash(img))
+            self.__dhash = str(dhash(img))
+            self.__phash = str(phash(img))
+            self.__colorhash = str(colorhash(img))
+
+    def __is_injected(self) -> bool:
+        """
+        Method checks is identifier already injected in document.
         :return: True if identifier is already injected in document, False – otherwise.
         """
         with zipfile.ZipFile(self.__path, 'r') as zip_ref:
@@ -168,17 +191,43 @@ class IdentifierInjector:
         with open(core_path, 'w', encoding='utf-8') as core_xml:
             core_xml.write(str(soup))
 
-    def inject_identifier(self, out_folder: str) -> None:
-
+    def __document_injection(self, out: str) -> None:
         """
-        Injects base64-string representation of identifier into document.
+        Injects base64-string representation of identifier in document.
+        :param out:  path for writing documents with injected id
+        :return: None
+        """
+        tempdir = mkdtemp()
+        with zipfile.ZipFile(self.__path, 'r') as zip_ref:
+            zip_ref.extractall(tempdir)
 
-        :param: out_folder: path for writing documents with injected
+        self.__set_explicit_fuzzy_hash(tempdir)
+
+        self.__write_identifier(tempdir)
+
+        utils.zip_path_to_file(tempdir, f'{out}{os.sep}{self.__file_name}')
+
+        shutil.rmtree(tempdir)
+
+    def __image_injection(self, out: str) -> None:
+        """
+        Injects of identifier in the basename of image.
+        :param out: path for writing documents with injected id
+        :return: None
+        """
+        id_text = f"{self.__defaulthash}_{self.__avghash}_{self.__dhash}_{self.__phash}_{self.__colorhash}{self.__extension}"
+        shutil.copy2(self.__path, out)
+        os.rename(
+            os.path.join(out, self.__file_name),
+            os.path.join(out, id_text)
+        )
+
+    def inject_identifier(self, out_folder: str) -> None:
+        """
+        Injects identifier in file and puts it to out_folder directory.
+        :param: out_folder: destination directory path for injected file
         :return: None.
         """
-
-        tempdir = mkdtemp()
-
         if not os.path.exists(self.__path):
             raise FileNotFoundError(f'File {self.__file_name} is no longer available at {self.__path}.')
 
@@ -188,13 +237,7 @@ class IdentifierInjector:
         if not os.path.isdir(out_folder):
             raise NotADirectoryError(f'Path "{out_folder}" should be accessible directory to write injected documents.')
 
-        with zipfile.ZipFile(self.__path, 'r') as zip_ref:
-            zip_ref.extractall(tempdir)
-
-        self.__set_explicit_fuzzy_hash(tempdir)
-
-        self.__write_identifier(tempdir)
-
-        utils.zip_path_to_file(tempdir, f'{out_folder}{os.sep}{self.__file_name}')
-
-        shutil.rmtree(tempdir)
+        if self.__extension in const.DOC_EXTENSIONS:
+            self.__document_injection(out_folder)
+        else:
+            self.__image_injection(out_folder)
