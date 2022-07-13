@@ -12,7 +12,7 @@ from constants import VALID_EXTENSIONS
 def injection(path_to_file: str, out_dir: str) -> None:
     id_ = injector.IdentifierInjector(path_to_file)
     id_.inject_identifier(out_dir)
-    print(f"Identifier was injected successfully in document "
+    print(f"Identifier was injected successfully in file "
           f"{os.path.join(out_dir, os.path.basename(path_to_file))}")
 
 
@@ -23,8 +23,8 @@ def launch():
                              'the identifier will be injected in all files with the desired extension.')
     parser.add_argument('-o', '--output', type=str, nargs=1,
                         help='Destination folder for saving injected document(s)')
-    parser.add_argument('-c', '--compare', type=str, nargs=2,
-                        help='Compare two documents by their identifiers.')
+    parser.add_argument('-c', '--compare', type=str, nargs='+',
+                        help='Compare first file with the next passed file(s) by their identifiers.')
 
     args = parser.parse_args()
     if args.inject:
@@ -47,17 +47,19 @@ def launch():
                 if not os.path.isdir(path_to_file) and extension in VALID_EXTENSIONS:
                     injection(path_to_file, *args.output)
 
-        print("Completed")
-    elif args.compare:
-        path1, path2 = args.compare[0], args.compare[1],
-        if not os.path.exists(path1):
-            print(f"Path {path1} does not exist")
+        print("Injection completed")
+
+    if args.compare is not None:
+        lhs = args.compare[0]
+        if not os.path.exists(lhs):
+            print(f"Path {lhs} does not exist")
             exit(1)
 
-        if not os.path.exists(path2):
-            print(f"Path {path2} does not exist")
-            exit(1)
+        for rhs in args.compare[1:]:
+            if not os.path.exists(rhs):
+                print(f"Path {rhs} does not exist")
+                continue
 
-        print(checker.identity_check(path1, path2))
+            print(checker.identity_check(lhs, rhs))
     else:
         parser.print_help()
