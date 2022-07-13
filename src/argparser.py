@@ -33,6 +33,10 @@ def launch():
             sys.exit(1)
 
         for path in args.inject:
+            if not os.path.exists(path):
+                print(f"Path {path} does not exist")
+                continue
+
             if not os.path.isdir(path):
                 injection(path, *args.output)
                 continue
@@ -42,7 +46,6 @@ def launch():
                 extension = os.path.splitext(path_to_file)[1]
                 if not os.path.isdir(path_to_file) and extension in VALID_EXTENSIONS:
                     injection(path_to_file, *args.output)
-            continue
 
         print("Completed")
     elif args.compare:
