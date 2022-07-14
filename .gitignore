@@ -130,5 +130,6 @@ dmypy.json
 
 # Side files/directories
 z_test/
+out/
 *.docx
 *.xlsx
