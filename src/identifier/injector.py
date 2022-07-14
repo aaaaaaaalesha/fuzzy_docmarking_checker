@@ -45,6 +45,45 @@ class IdentifierInjector:
         else:
             self.__collect_img_fields()
 
+    def inject_identifier(self, out_folder: str) -> None:
+        """
+        Injects identifier in file and puts it to out_folder directory.
+        :param: out_folder: destination directory path for injected file
+        :return: None.
+        """
+        if not os.path.exists(self.__path):
+            raise FileNotFoundError(f'File {self.__file_name} is no longer available at {self.__path}.')
+
+        if not os.path.exists(out_folder):
+            os.makedirs(out_folder)
+
+        if not os.path.isdir(out_folder):
+            raise NotADirectoryError(f'Path "{out_folder}" should be accessible directory to write injected documents.')
+
+        if self.__extension in const.DOC_EXTENSIONS:
+            self.__document_injection(out_folder)
+        else:
+            self.__image_injection(out_folder)
+
+    def _is_injected(self) -> bool:
+        """
+        Method checks is identifier already injected in document.
+        :return: True if identifier is already injected in document, False – otherwise.
+        """
+        with zipfile.ZipFile(self.__path, 'r') as zip_ref:
+            soup = BeautifulSoup(zip_ref.read(const.CORE), 'xml')
+            description_tag = soup.find(const.DOC_DC_DESCRIPTION)
+
+            if description_tag is not None and description_tag.string:
+                try:
+                    positions = utils.decode_base64_id(description_tag.string).rsplit()
+                except UnicodeDecodeError:
+                    return False
+
+                return True
+
+        return False
+
     def __collect_document_fields(self) -> None:
         """
         Collects all needed fields for document.
@@ -68,8 +107,7 @@ class IdentifierInjector:
         tag = soup.find(const.DOC_DT_MODIFIED)
         self.__modified_time = tag.string if tag is not None and tag.string else const.NOT_FOUND
 
-        if not self.__is_injected():
-            self.__fuzzy_hash = self.__get_fuzzy_hash()
+        self.__fuzzy_hash = self.__get_fuzzy_hash()
 
     def __collect_img_fields(self) -> None:
         """
@@ -82,25 +120,6 @@ class IdentifierInjector:
             self.__dhash = str(dhash(img))
             self.__phash = str(phash(img))
             self.__colorhash = str(colorhash(img))
-
-    def __is_injected(self) -> bool:
-        """
-        Method checks is identifier already injected in document.
-        :return: True if identifier is already injected in document, False – otherwise.
-        """
-        with zipfile.ZipFile(self.__path, 'r') as zip_ref:
-            soup = BeautifulSoup(zip_ref.read(const.CORE), 'xml')
-            description_tag = soup.find(const.DOC_DC_DESCRIPTION)
-
-            if description_tag is not None and description_tag.string:
-                try:
-                    positions = utils.decode_base64_id(description_tag.string).rsplit()
-                except UnicodeDecodeError:
-                    return False
-                self.__fuzzy_hash = positions[-1]
-                return True
-
-        return False
 
     def __get_fuzzy_hash(self) -> str:
         """
@@ -127,9 +146,9 @@ class IdentifierInjector:
     @staticmethod
     def __collect_word_content(source_dir_: str, string_builder_: list) -> None:
         """
-
-        :param source_dir_:
-        :param string_builder_:
+        Collects all valuable content from word document.
+        :param source_dir_: source directory inside unzipped word document
+        :param string_builder_: list for collecting word content
         :return:
         """
         existing_files = utils.get_files_list(source_dir_)
@@ -143,10 +162,10 @@ class IdentifierInjector:
     @staticmethod
     def __collect_excel_content(source_dir_: str, string_builder_: list) -> None:
         """
-
-        :param source_dir_:
-        :param string_builder_:
-        :return:
+        Collects all valuable content from excel document.
+        :param source_dir_: source directory inside unzipped excel document
+        :param string_builder_: list for collecting excel content
+        :return: None
         """
         existing_files = utils.get_files_list(source_dir_)
 
@@ -255,23 +274,3 @@ class IdentifierInjector:
             os.path.join(out, self.__file_name),
             os.path.join(out, id_text)
         )
-
-    def inject_identifier(self, out_folder: str) -> None:
-        """
-        Injects identifier in file and puts it to out_folder directory.
-        :param: out_folder: destination directory path for injected file
-        :return: None.
-        """
-        if not os.path.exists(self.__path):
-            raise FileNotFoundError(f'File {self.__file_name} is no longer available at {self.__path}.')
-
-        if not os.path.exists(out_folder):
-            os.makedirs(out_folder)
-
-        if not os.path.isdir(out_folder):
-            raise NotADirectoryError(f'Path "{out_folder}" should be accessible directory to write injected documents.')
-
-        if self.__extension in const.DOC_EXTENSIONS:
-            self.__document_injection(out_folder)
-        else:
-            self.__image_injection(out_folder)

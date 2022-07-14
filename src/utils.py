@@ -84,4 +84,7 @@ def extract_xml_tags(path: str, out_list: list, tag_name: str, attrs=False) -> N
                 continue
 
             if tag.string is not None:
+                if tag.get('xml:space') is not None:
+                    out_list.append(' ')
+                    continue
                 out_list.append(tag.string)
