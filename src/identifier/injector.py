@@ -15,19 +15,24 @@ import src.ssdeep as ssdeep
 import src.utils as utils
 
 
-class IncorrectExtensionException(Exception):
+class InvalidExtensionException(Exception):
     pass
 
 
 class IdentifierInjector:
-    """Class implements generating identifier for .docx/.xlsx files and its injection."""
+    """
+    Class implements generating identifier for files and its injection.
+    Supported file extensions:
+    - .docx, .xlsx – documents;
+    - .jpg, .png, .bmp – images.
+    """
 
     def __init__(self, path: str):
         self.__path = path
 
         self.__extension = os.path.splitext(path)[1]
         if self.__extension not in const.VALID_EXTENSIONS:
-            raise IncorrectExtensionException(
+            raise InvalidExtensionException(
                 f'Valid file should have extension like {", ".join(const.VALID_EXTENSIONS)}. Not {self.__extension}.'
             )
         self.__path = path

@@ -29,49 +29,57 @@ def launch():
                         help='Compare first file with the next passed file(s) by their identifiers.')
 
     args = parser.parse_args()
-    if args.inject:
-        if not args.output:
-            parser.error("Named argument -o (--output) required.")
-            sys.exit(1)
 
-        for path in args.inject:
-            if not os.path.exists(path):
-                print(f"Path {path} does not exist")
-                continue
+    try:
+        # -i, --inject
+        if args.inject:
+            if not args.output:
+                parser.error("Named argument -o (--output) required.")
+                sys.exit(1)
 
-            if not os.path.isdir(path):
-                injection(path, *args.output)
-                continue
+            for path in args.inject:
+                if not os.path.exists(path):
+                    print(f"Path {path} does not exist")
+                    continue
 
-            if args.recursive:
-                for dirpath, dirs, files in os.walk(path):
-                    for file in files:
-                        path_to_file = os.path.join(path, dirpath, file)
-                        extension = os.path.splitext(path_to_file)[1]
-                        if extension in VALID_EXTENSIONS:
-                            injection(path_to_file, *args.output)
+                if not os.path.isdir(path):
+                    injection(path, *args.output)
+                    continue
 
-                continue
+                # -r, --recursive
+                if args.recursive:
+                    for dirpath, dirs, files in os.walk(path):
+                        for file in files:
+                            path_to_file = os.path.join(path, dirpath, file)
+                            extension = os.path.splitext(path_to_file)[1]
+                            if extension in VALID_EXTENSIONS:
+                                injection(path_to_file, *args.output)
 
-            for file in os.listdir(path):
-                path_to_file = os.path.join(path, file)
-                extension = os.path.splitext(path_to_file)[1]
-                if not os.path.isdir(path_to_file) and extension in VALID_EXTENSIONS:
-                    injection(path_to_file, *args.output)
+                    continue
 
-        print("Injection completed")
+                for file in os.listdir(path):
+                    path_to_file = os.path.join(path, file)
+                    extension = os.path.splitext(path_to_file)[1]
+                    if not os.path.isdir(path_to_file) and extension in VALID_EXTENSIONS:
+                        injection(path_to_file, *args.output)
 
-    elif args.compare is not None:
-        lhs = args.compare[0]
-        if not os.path.exists(lhs):
-            print(f"Path {lhs} does not exist")
-            exit(1)
+            print("Injection completed")
 
-        for rhs in args.compare[1:]:
-            if not os.path.exists(rhs):
-                print(f"Path {rhs} does not exist")
-                continue
+        # -c, --compare
+        elif args.compare is not None:
+            lhs = args.compare[0]
+            if not os.path.exists(lhs):
+                print(f"Path {lhs} does not exist")
+                exit(1)
 
-            print(checker.identity_check(lhs, rhs))
-    else:
-        parser.print_help()
+            for rhs in args.compare[1:]:
+                if not os.path.exists(rhs):
+                    print(f"Path {rhs} does not exist")
+                    continue
+
+                print(checker.identity_check(lhs, rhs))
+        else:
+            parser.print_help()
+
+    except Exception as err:
+        print(err)

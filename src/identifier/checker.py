@@ -9,7 +9,7 @@ from prettytable import PrettyTable
 
 import src.constants as const
 from src.utils import decode_base64_id
-from src.identifier.injector import IncorrectExtensionException
+from src.identifier.injector import InvalidExtensionException
 from src.ssdeep import compare as ssdeep_cmp
 
 
@@ -29,7 +29,7 @@ def identity_check(file1: str, file2: str) -> str:
     )
 
     if not _comparable(file1, file2):
-        raise IncorrectExtensionException('Files to compare have incomparable extensions')
+        raise InvalidExtensionException('Files to compare have incomparable extensions')
 
     out1: dict = parse_file_identifier(file1)
     out2: dict = parse_file_identifier(file2)
@@ -63,7 +63,7 @@ def parse_file_identifier(file: str) -> dict:
     elif extension in const.IMG_EXTENSIONS:
         return _parse_image_identifier(file)
     else:
-        raise IncorrectExtensionException(
+        raise InvalidExtensionException(
             f'Valid file should have extension like {", ".join(const.VALID_EXTENSIONS)}. Not {extension}.'
         )
 
