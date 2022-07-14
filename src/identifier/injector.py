@@ -115,20 +115,43 @@ class IdentifierInjector:
         source_dir = tempdir
         if self.__extension == '.docx':
             source_dir += f'{os.sep}word'
+            self.__collect_word_content(source_dir, string_builder)
         else:  # if '.xlsx'
-            source_dir += f'{os.sep}xl'
-
-        # Collecting all files in a directory
-        files_list = utils.get_files_list(source_dir)
-        if self.__extension == '.xlsx':
-            files_list += utils.get_files_list(f'{source_dir}{os.sep}worksheets')
-        for file in files_list:
-            with open(file, encoding='utf-8') as f:
-                string_builder.append(f.read())
+            source_dir += f'{os.sep}xl{os.sep}worksheets'
+            self.__collect_excel_content(source_dir, string_builder)
 
         shutil.rmtree(tempdir)
 
         return ssdeep.hash(''.join(string_builder))
+
+    @staticmethod
+    def __collect_word_content(source_dir_: str, string_builder_: list) -> None:
+        """
+
+        :param source_dir_:
+        :param string_builder_:
+        :return:
+        """
+        existing_files = utils.get_files_list(source_dir_)
+        existing_files.sort()
+
+        for file in existing_files:
+            basename = os.path.basename(file)
+            if basename == 'document.xml' or basename.startswith(('footer', 'header')):
+                utils.extract_xml_tags(file, string_builder_, 'w:t')
+
+    @staticmethod
+    def __collect_excel_content(source_dir_: str, string_builder_: list) -> None:
+        """
+
+        :param source_dir_:
+        :param string_builder_:
+        :return:
+        """
+        existing_files = utils.get_files_list(source_dir_)
+
+        for file in existing_files:
+            utils.extract_xml_tags(file, string_builder_, 'sheetData', attrs=True)
 
     def __write_identifier(self, tempdir_path: str) -> None:
 

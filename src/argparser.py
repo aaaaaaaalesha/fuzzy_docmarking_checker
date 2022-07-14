@@ -12,8 +12,8 @@ from constants import VALID_EXTENSIONS
 def injection(path_to_file: str, out_dir: str) -> None:
     id_ = injector.IdentifierInjector(path_to_file)
     id_.inject_identifier(out_dir)
-    print(f"Identifier was injected successfully in file "
-          f"{os.path.join(out_dir, os.path.basename(path_to_file))}")
+    print(f"Identifier was injected successfully in file {os.path.basename(path_to_file)} "
+          f"and moved in out directory {os.path.abspath(out_dir)}")
 
 
 def launch():
@@ -37,6 +37,7 @@ def launch():
                 parser.error("Named argument -o (--output) required.")
                 sys.exit(1)
 
+            print("Processing...")
             for path in args.inject:
                 if not os.path.exists(path):
                     print(f"Path {path} does not exist")

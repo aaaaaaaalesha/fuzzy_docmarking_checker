@@ -4,6 +4,8 @@ import base64
 import os
 import zipfile
 
+from bs4 import BeautifulSoup
+
 
 def encode_base64_id(text: str) -> str:
     """
@@ -63,3 +65,23 @@ def zip_path_to_file(dir_path: str, file_path: str) -> None:
                 filename = os.path.join(root, file)
                 relpath = os.path.relpath(os.path.join(root, file), dir_path)
                 zipf.write(filename, relpath)
+
+
+def extract_xml_tags(path: str, out_list: list, tag_name: str, attrs=False) -> None:
+    """
+    Finds all tags in xml file and appends its str representation content to out_list.
+    :param path: path to xml file
+    :param out_list: list for tags content extracting
+    :param tag_name: name of tags we are searching for
+    :param attrs: if True adds full tag, otherwise – only string content inside
+    :return: None
+    """
+    with open(path, encoding='utf-8') as file:
+        soup = BeautifulSoup(file.read(), 'xml')
+        for tag in soup.find_all(tag_name):
+            if attrs:
+                out_list.append(str(tag))
+                continue
+
+            if tag.string is not None:
+                out_list.append(tag.string)
