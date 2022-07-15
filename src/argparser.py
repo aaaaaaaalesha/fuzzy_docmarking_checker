@@ -4,16 +4,44 @@ import sys
 import os.path
 
 import argparse
+from typing import Callable
 
 from src.identifier import injector, checker
 from constants import VALID_EXTENSIONS
 
 
-def injection(path_to_file: str, out_dir: str) -> None:
+def injection(out_dir: str, path_to_file: str) -> None:
     id_ = injector.IdentifierInjector(path_to_file)
     id_.inject_identifier(out_dir)
     print(f"Identifier was injected successfully in file {os.path.basename(path_to_file)} "
           f"and moved in out directory {os.path.abspath(out_dir)}")
+
+
+def compare(lhs: str, rhs: str) -> None:
+    print(checker.identity_check(lhs, rhs))
+
+
+def recursive_handler(target_dir: str, func: Callable, first_arg) -> None:
+    for dirpath, dirs, files in os.walk(target_dir):
+        for file in files:
+            path_to_file = os.path.join(target_dir, dirpath, file)
+            extension = os.path.splitext(path_to_file)[1]
+            if extension in VALID_EXTENSIONS:
+                try:
+                    func(first_arg, path_to_file)
+                except Exception as err:
+                    print(err)
+
+
+def straight_handler(target_dir: str, func: Callable, first_arg) -> None:
+    for file in os.listdir(target_dir):
+        path_to_file = os.path.join(target_dir, file)
+        extension = os.path.splitext(path_to_file)[1]
+        if not os.path.isdir(path_to_file) and extension in VALID_EXTENSIONS:
+            try:
+                func(first_arg, path_to_file)
+            except Exception as err:
+                print(err)
 
 
 def launch():
@@ -34,7 +62,7 @@ def launch():
         # -i, --inject
         if args.inject:
             if not args.output:
-                parser.error("Named argument -o (--output) required.")
+                parser.error("Named argument -o (--output) required")
                 sys.exit(1)
 
             print("Processing...")
@@ -44,33 +72,28 @@ def launch():
                     continue
 
                 if not os.path.isdir(path):
-                    injection(path, *args.output)
+                    injection(*args.output, path)
                     continue
 
                 # -r, --recursive
                 if args.recursive:
-                    for dirpath, dirs, files in os.walk(path):
-                        for file in files:
-                            path_to_file = os.path.join(path, dirpath, file)
-                            extension = os.path.splitext(path_to_file)[1]
-                            if extension in VALID_EXTENSIONS:
-                                injection(path_to_file, *args.output)
-
+                    recursive_handler(path, injection, *args.output)
                     continue
 
-                for file in os.listdir(path):
-                    path_to_file = os.path.join(path, file)
-                    extension = os.path.splitext(path_to_file)[1]
-                    if not os.path.isdir(path_to_file) and extension in VALID_EXTENSIONS:
-                        injection(path_to_file, *args.output)
+                straight_handler(path, injection, *args.output)
 
             print("Injection completed")
 
         # -c, --compare
         elif args.compare is not None:
+            # First argument is always target file.
             lhs = args.compare[0]
             if not os.path.exists(lhs):
                 print(f"Path {lhs} does not exist")
+                exit(1)
+
+            if os.path.isdir(lhs):
+                print(f"{lhs} should be a target file, not directory")
                 exit(1)
 
             for rhs in args.compare[1:]:
@@ -78,7 +101,19 @@ def launch():
                     print(f"Path {rhs} does not exist")
                     continue
 
-                print(checker.identity_check(lhs, rhs))
+                if not os.path.isdir(rhs):
+                    try:
+                        print(checker.identity_check(lhs, rhs))
+                    except Exception as err:
+                        print(err)
+
+                # -r, --recursive
+                if args.recursive:
+                    recursive_handler(rhs, compare, lhs)
+                    continue
+
+                straight_handler(rhs, compare, lhs)
+
         else:
             parser.print_help()
 

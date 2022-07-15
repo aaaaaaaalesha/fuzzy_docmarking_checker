@@ -29,7 +29,7 @@ def identity_check(file1: str, file2: str) -> str:
     )
 
     if not _comparable(file1, file2):
-        raise InvalidExtensionException('Files to compare have incomparable extensions')
+        raise InvalidExtensionException(f'Files {file1} and {file2} have incomparable extensions')
 
     out1: dict = parse_file_identifier(file1)
     out2: dict = parse_file_identifier(file2)
