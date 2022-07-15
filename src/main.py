@@ -2,6 +2,10 @@
 
 import src.argparser
 
+import sys
+
+sys.path.append('src')
+
 
 def main():
     src.argparser.launch()

@@ -7,7 +7,7 @@ import argparse
 from typing import Callable
 
 from src.identifier import injector, checker
-from constants import VALID_EXTENSIONS
+from src.constants import VALID_EXTENSIONS
 
 
 def injection(out_dir: str, path_to_file: str, to_file=None) -> None:
@@ -50,13 +50,13 @@ def launch():
                         help='Inject identifier in document(s). If the passed path is a directory, '
                              'the identifier will be injected in all files with the desired extension.')
     parser.add_argument('-o', '--output', type=str, nargs=1,
-                        help='Destination folder for saving injected document(s)')
+                        help='Destination folder for saving injected document(s).')
     parser.add_argument('-r', '--recursive', action='store_true',
                         help='Collects file for injection in folder recursively.')
     parser.add_argument('-c', '--compare', type=str, nargs='+',
                         help='Compare first file with the next passed file(s) by their identifiers.')
     parser.add_argument('-wr', '--write_results', type=str, nargs=1,
-                        help='Writing compare results to passed .csv file')
+                        help='Writing compare results to passed .csv file.')
 
     args = parser.parse_args()
 
