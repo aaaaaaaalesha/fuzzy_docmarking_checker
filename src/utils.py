@@ -3,6 +3,7 @@
 import base64
 import os
 import zipfile
+import hashlib
 
 from bs4 import BeautifulSoup
 
@@ -88,3 +89,12 @@ def extract_xml_tags(path: str, out_list: list, tag_name: str, attrs=False) -> N
                     out_list.append(' ')
                     continue
                 out_list.append(tag.string)
+
+
+def get_file_sha3(path: str) -> str:
+    sha3 = None
+    with open(path, 'rb') as f:
+        data = bytes(f.read())
+        sha3 = hashlib.sha3_256(data).hexdigest()
+
+    return sha3

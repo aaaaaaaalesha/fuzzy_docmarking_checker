@@ -9,19 +9,21 @@ from prettytable import PrettyTable
 
 import src.constants as const
 from src.utils import decode_base64_id
-from src.identifier.injector import InvalidExtensionException
 from src.ssdeep import compare as ssdeep_cmp
+from src.identifier.injector import InvalidExtensionException
+from src.identifier.results import write_compare_results
 
 
 class NoIdentifierException(Exception):
     pass
 
 
-def identity_check(file1: str, file2: str) -> str:
+def identity_check(file1: str, file2: str, to_file=None) -> str:
     """
     Builds string with table of matching files' identifiers data.
     :param file1: first file path
     :param file2: second file path
+    :param to_file: if not None, compare results will be written in passed file
     :return: resulted sting table
     """
     table = PrettyTable(
@@ -33,6 +35,9 @@ def identity_check(file1: str, file2: str) -> str:
 
     out1: dict = parse_file_identifier(file1)
     out2: dict = parse_file_identifier(file2)
+
+    if to_file is not None:
+        write_compare_results((out1, out2), to_file, file1)
 
     row_names = tuple(out1.keys())
 
